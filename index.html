@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Dark | Biel Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        :root {
+            --space-bg: #0a0e17;
+            --panel-bg: rgba(16, 20, 31, 0.95);
+            --card-bg: rgba(22, 26, 39, 0.8);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.07);
+            --primary: #6c5ce7;
+            --primary-glow: rgba(108, 92, 231, 0.3);
+            --secondary: #00cec9;
+            --accent: #fd79a8;
+            --danger: #ff7675;
+            --success: #00b894;
+            --text: #e0e0e0;
+            --text-secondary: #8a8fa3;
+            --shadow-deep: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 30px rgba(108, 92, 231, 0.2);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: var(--space-bg);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(108, 92, 231, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 206, 201, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 50% 50%, rgba(253, 121, 168, 0.05) 0%, transparent 30%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Partículas de fundo */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        /* Container principal */
+        .calculator-container {
+            background: var(--panel-bg);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            border-radius: 28px;
+            padding: 35px;
+            box-shadow: var(--shadow-deep), var(--shadow-glow);
+            border: 1px solid var(--glass-border);
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 2;
+            animation: appear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Cabeçalho com design futurista */
+        .calculator-header {
+            text-align: center;
+            margin-bottom: 35px;
+            position: relative;
+        }
+
+        .calculator-header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .calculator-header h1::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        .calculator-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        /* Display com efeito neônio */
+        .calculator-display {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 18px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: right;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .calculator-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        .previous-operand {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            min-height: 27px;
+            word-wrap: break-word;
+            word-break: break-all;
+            margin-bottom: 10px;
+            font-family: 'SF Mono', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .current-operand {
+            font-size: 3.2rem;
+            color: var(--text);
+            font-weight: 300;
+            word-wrap: break-word;
+            word-break: break-all;
+            line-height: 1.1;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+            font-family: 'SF Mono', monospace;
+        }
+
+        /* Grid de botões com design cyber */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .calculator-btn {
+            height: 75px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calculator-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: 0.5s;
+        }
+
+        .calculator-btn:hover::before {
+            left: 100%;
+        }
+
+        .calculator-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .calculator-btn:active {
+            transform: translateY(0) scale(0.98);
+            transition: transform 0.1s;
+        }
+
+        /* Tipos de botões */
+        .number {
+            background: rgba(30, 35, 50, 0.7);
+        }
+
+        .operator {
+            background: rgba(108, 92, 231, 0.15);
+            border-color: rgba(108, 92, 231, 0.3);
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .equals {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            grid-column: span 2;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.3);
+        }
+
+        .equals:hover {
+            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4);
+        }
+
+        .function {
+            background: rgba(255, 118, 117, 0.15);
+            border-color: rgba(255, 118, 117, 0.3);
+            color: var(--danger);
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+
+        /* Footer estilizado */
+        .calculator-footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calculator-footer .brand {
+            font-weight: 700;
+            color: var(--secondary);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        /* Botões flutuantes */
+        .floating-btn {
+            position: fixed;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: var(--transition);
+            z-index: 1000;
+            box-shadow: var(--shadow-deep);
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            border-color: var(--primary);
+            background: rgba(108, 92, 231, 0.2);
+        }
+
+        .theme-toggle {
+            top: 24px;
+            right: 24px;
+        }
+
+        .history-toggle {
+            top: 24px;
+            left: 24px;
+        }
+
+        /* Painel de histórico cyber */
+        .history-panel {
+            position: fixed;
+            left: 24px;
+            top: 100px;
+            background: var(--card-bg);
+            backdrop-filter: blur(40px) saturate(200%);
+            border-radius: 20px;
+            padding: 25px;
+            width: 350px;
+            max-height: 500px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            display: none;
+            z-index: 999;
+            box-shadow: var(--shadow-deep);
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .history-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .panel-header h3 {
+            color: var(--text);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .clear-history {
+            background: rgba(255, 118, 117, 0.2);
+            color: var(--danger);
+            border: 1px solid rgba(255, 118, 117, 0.3);
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .clear-history:hover {
+            background: rgba(255, 118, 117, 0.3);
+            transform: scale(1.05);
+        }
+
+        .history-content {
+            overflow-y: auto;
+            max-height: 400px;
+            padding-right: 10px;
+        }
+
+        .history-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .history-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .history-content::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .history-item {
+            color: var(--text);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .history-item:hover {
+            background: rgba(108, 92, 231, 0.1);
+            border-color: rgba(108, 92, 231, 0.3);
+            transform: translateX(5px);
+        }
+
+        .history-calculation {
+            font-family: 'SF Mono', monospace;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+            color: var(--secondary);
+        }
+
+        .history-result {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: 'SF Mono', monospace;
+        }
+
+        .empty-history {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            padding: 40px 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+        }
+
+        /* Efeitos de matriz (codificação) */
+        .matrix-effect {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-family: 'SF Mono', monospace;
+            color: var(--success);
+            font-size: 0.8rem;
+            opacity: 0.5;
+            animation: blink 2s infinite;
+        }
+
+        /* Animações */
+        @keyframes appear {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-1000px) rotate(720deg); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsividade */
+        @media (max-width: 480px) {
+            .calculator-container {
+                padding: 25px;
+                border-radius: 24px;
+            }
+            
+            .calculator-btn {
+                height: 65px;
+                font-size: 1.2rem;
+                border-radius: 14px;
+            }
+            
+            .current-operand {
+                font-size: 2.8rem;
+            }
+            
+            .history-panel {
+                width: calc(100vw - 48px);
+                left: 24px;
+                right: 24px;
+                top: 90px;
+            }
+            
+            .floating-btn {
+                width: 48px;
+                height: 48px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .calculator-grid {
+                gap: 12px;
+            }
+            
+            .calculator-btn {
+                height: 60px;
+                font-size: 1.1rem;
+            }
+            
+            .current-operand {
+                font-size: 2.2rem;
+            }
+            
+            .calculator-header h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Status LED */
+        .status-led {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        /* Efeito de atualização sutil */
+        .updating {
+            opacity: 0.8;
+            transform: scale(0.99);
+            transition: all 0.1s;
+        }
+        
+        /* Logo Biel Calculator */
+        .logo {
+            font-family: 'SF Mono', monospace;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        
+        /* Indicador de operação percentual */
+        .percent-mode {
+            color: var(--accent);
+            font-size: 0.7rem;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <!-- Efeito de partículas -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Botões flutuantes -->
+    <button class="floating-btn history-toggle" id="historyToggle">
+        <i class="fas fa-history"></i>
+    </button>
+    
+    <button class="floating-btn theme-toggle" id="themeToggle">
+        <i class="fas fa-palette"></i>
+    </button>
+
+    <!-- Painel de histórico -->
+    <div class="history-panel" id="historyPanel">
+        <div class="panel-header">
+            <h3><i class="fas fa-code"></i> HISTÓRICO</h3>
+            <button class="clear-history" id="clearHistory">LIMPAR</button>
+        </div>
+        <div class="history-content" id="historyList">
+            <div class="empty-history">NENHUM DADO ENCONTRADO</div>
+        </div>
+        <div class="matrix-effect">SISTEMA: ONLINE</div>
+    </div>
+
+    <!-- Calculadora principal -->
+    <div class="calculator-container">
+        <div class="status-led"></div>
+        
+        <div class="calculator-header">
+            <h1>CALCULADORA</h1>
+            <p>BIEL CALCULATOR SYSTEM</p>
+        </div>
+
+        <div class="calculator-display">
+            <div class="previous-operand" id="previousOperand"></div>
+            <div class="current-operand" id="currentOperand">0</div>
+        </div>
+
+        <!-- Teclado principal -->
+        <div class="calculator-grid">
+            <!-- Primeira linha -->
+            <button class="calculator-btn function" data-action="clear">AC</button>
+            <button class="calculator-btn function" data-action="delete">DEL</button>
+            <button class="calculator-btn operator" data-operation="%">%</button>
+            <button class="calculator-btn operator" data-operation="÷">÷</button>
+
+            <!-- Segunda linha -->
+            <button class="calculator-btn number" data-number="7">7</button>
+            <button class="calculator-btn number" data-number="8">8</button>
+            <button class="calculator-btn number" data-number="9">9</button>
+            <button class="calculator-btn operator" data-operation="×">×</button>
+
+            <!-- Terceira linha -->
+            <button class="calculator-btn number" data-number="4">4</button>
+            <button class="calculator-btn number" data-number="5">5</button>
+            <button class="calculator-btn number" data-number="6">6</button>
+            <button class="calculator-btn operator" data-operation="-">-</button>
+
+            <!-- Quarta linha -->
+            <button class="calculator-btn number" data-number="1">1</button>
+            <button class="calculator-btn number" data-number="2">2</button>
+            <button class="calculator-btn number" data-number="3">3</button>
+            <button class="calculator-btn operator" data-operation="+">+</button>
+
+            <!-- Quinta linha -->
+            <button class="calculator-btn number zero" data-number="0">0</button>
+            <button class="calculator-btn number" data-number=".">.</button>
+            <button class="calculator-btn equals" data-action="equals">=</button>
+        </div>
+
+        <div class="calculator-footer">
+            <div class="logo">BIEL CALCULATOR</div>
+            <div>SINCRONIZADO: <span class="status">ATIVO</span></div>
+            <div>MEM: <span id="memoryStatus">0 B</span></div>
+        </div>
+    </div>
+
+    <script>
+        class BielCalculator {
+            constructor() {
+                this.currentOperand = '0';
+                this.previousOperand = '';
+                this.operation = null;
+                this.waitingForNewOperand = false;
+                this.memory = 0;
+                this.history = JSON.parse(localStorage.getItem('bielCalculatorHistory')) || [];
+                this.precision = 12;
+                this.isError = false;
+                this.percentMode = false; // Novo: modo percentual
+                this.initParticles();
+                this.updateDisplay();
+                this.updateHistoryDisplay();
+            }
+
+            initParticles() {
+                const particlesContainer = document.getElementById('particles');
+                for (let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.width = Math.random() * 3 + 1 + 'px';
+                    particle.style.height = particle.style.width;
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 20 + 's';
+                    particle.style.opacity = Math.random() * 0.3 + 0.1;
+                    particlesContainer.appendChild(particle);
+                }
+            }
+
+            clear() {
+                this.currentOperand = '0';
+                this.previousOperand = '';
+                this.operation = null;
+                this.waitingForNewOperand = false;
+                this.isError = false;
+                this.percentMode = false;
+                this.playSound('click');
+            }
+
+            delete() {
+                if (this.isError) {
+                    this.clear();
+                    return;
+                }
+                
+                if (this.currentOperand === '0' || this.currentOperand.length === 1) {
+                    this.currentOperand = '0';
+                } else {
+                    this.currentOperand = this.currentOperand.slice(0, -1);
+                }
+                this.playSound('delete');
+            }
+
+            appendNumber(number) {
+                if (this.isError) this.clear();
+                
+                if (this.waitingForNewOperand) {
+                    this.currentOperand = number === '.' ? '0.' : number;
+                    this.waitingForNewOperand = false;
+                    this.percentMode = false; // Sai do modo percentual ao digitar novo número
+                } else {
+                    if (number === '.' && this.currentOperand.includes('.')) return;
+                    if (this.currentOperand === '0' && number !== '.') {
+                        this.currentOperand = number;
+                    } else {
+                        if (this.currentOperand.length < 15) {
+                            this.currentOperand += number;
+                        }
+                    }
+                }
+                this.playSound('key');
+            }
+
+            chooseOperation(operation) {
+                if (this.isError) return;
+                
+                this.playSound('switch');
+                
+                // Lógica para porcentagem
+                if (operation === '%') {
+                    const current = parseFloat(this.currentOperand);
+                    
+                    if (this.operation && this.previousOperand && !this.waitingForNewOperand) {
+                        // Caso 1: 7 % 15 (7% de 15)
+                        const prev = parseFloat(this.previousOperand);
+                        let result;
+                        
+                        switch(this.operation) {
+                            case '+':
+                                result = prev + (prev * current / 100);
+                                break;
+                            case '-':
+                                result = prev - (prev * current / 100);
+                                break;
+                            case '×':
+                                result = prev * (current / 100);
+                                break;
+                            case '÷':
+                                result = prev / (current / 100);
+                                break;
+                            default:
+                                result = prev * (current / 100);
+                        }
+                        
+                        this.addToHistory(prev, this.operation + ' ' + current + '%', '', result);
+                        this.currentOperand = result.toString();
+                        this.previousOperand = '';
+                        this.operation = null;
+                        this.waitingForNewOperand = true;
+                        
+                    } else if (this.previousOperand && this.operation && this.waitingForNewOperand) {
+                        // Caso 2: 15 × % (15 × porcentagem anterior)
+                        const prev = parseFloat(this.previousOperand);
+                        const percentValue = prev * (current / 100);
+                        this.currentOperand = percentValue.toString();
+                        this.waitingForNewOperand = false;
+                        
+                    } else {
+                        // Caso 3: 8 % (apenas converte para decimal)
+                        const percentValue = current / 100;
+                        this.currentOperand = percentValue.toString();
+                        this.waitingForNewOperand = true;
+                        this.percentMode = true;
+                    }
+                    
+                    this.updateDisplay();
+                    return;
+                }
+
+                // Para outras operações
+                if (this.operation && !this.waitingForNewOperand) {
+                    this.compute();
+                }
+
+                this.operation = operation;
+                this.previousOperand = this.currentOperand;
+                this.waitingForNewOperand = true;
+                this.percentMode = false;
+            }
+
+            compute() {
+                if (this.isError || !this.operation) return;
+                
+                let computation;
+                const prev = parseFloat(this.previousOperand);
+                const current = parseFloat(this.currentOperand);
+
+                if (isNaN(prev) || isNaN(current)) return;
+
+                try {
+                    switch (this.operation) {
+                        case '+':
+                            computation = this.preciseAdd(prev, current);
+                            break;
+                        case '-':
+                            computation = this.preciseSubtract(prev, current);
+                            break;
+                        case '×':
+                            computation = this.preciseMultiply(prev, current);
+                            break;
+                        case '÷':
+                            if (current === 0) throw new Error('Divisão por zero');
+                            computation = this.preciseDivide(prev, current);
+                            break;
+                        default:
+                            return;
+                    }
+
+                    // Formata o resultado
+                    let result = computation.toString();
+                    if (result.includes('.')) {
+                        const parts = result.split('.');
+                        if (parts[1].length > 8) {
+                            result = parseFloat(computation.toFixed(8)).toString();
+                        }
+                        result = parseFloat(result).toString();
+                    }
+
+                    this.addToHistory(prev, this.operation, current, result);
+                    this.currentOperand = result;
+                    this.operation = null;
+                    this.previousOperand = '';
+                    this.waitingForNewOperand = true;
+                    this.percentMode = false;
+                    
+                    this.playSound('compute');
+                    this.showAnimation('success');
+                    
+                } catch (error) {
+                    this.showError(error.message);
+                }
+            }
+
+            // Operações matemáticas precisas
+            preciseAdd(a, b) {
+                const factor = Math.pow(10, Math.max(this.getDecimalPlaces(a), this.getDecimalPlaces(b)));
+                return (Math.round(a * factor) + Math.round(b * factor)) / factor;
+            }
+
+            preciseSubtract(a, b) {
+                const factor = Math.pow(10, Math.max(this.getDecimalPlaces(a), this.getDecimalPlaces(b)));
+                return (Math.round(a * factor) - Math.round(b * factor)) / factor;
+            }
+
+            preciseMultiply(a, b) {
+                const aFactor = Math.pow(10, this.getDecimalPlaces(a));
+                const bFactor = Math.pow(10, this.getDecimalPlaces(b));
+                return (Math.round(a * aFactor) * Math.round(b * bFactor)) / (aFactor * bFactor);
+            }
+
+            preciseDivide(a, b) {
+                const factor = Math.pow(10, this.precision);
+                return (Math.round(a * factor) / Math.round(b * factor));
+            }
+
+            getDecimalPlaces(num) {
+                if (Math.floor(num) === num) return 0;
+                return num.toString().split('.')[1].length || 0;
+            }
+
+            // Gerenciamento de histórico
+            addToHistory(prev, operation, current, result) {
+                const historyItem = {
+                    id: Date.now(),
+                    calculation: operation === '%' ? 
+                        `${this.formatNumber(prev)} ${operation}` : 
+                        `${this.formatNumber(prev)} ${operation} ${this.formatNumber(current)}`,
+                    result: result,
+                    full: operation === '%' ?
+                        `${this.formatNumber(prev)} ${operation} = ${this.formatNumber(result)}` :
+                        `${this.formatNumber(prev)} ${operation} ${this.formatNumber(current)} = ${this.formatNumber(result)}`,
+                    timestamp: new Date().toLocaleTimeString('pt-BR', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        second: '2-digit'
+                    })
+                };
+
+                this.history.unshift(historyItem);
+                if (this.history.length > 50) this.history.pop();
+                
+                localStorage.setItem('bielCalculatorHistory', JSON.stringify(this.history));
+                this.updateHistoryDisplay();
+                this.updateMemoryStatus();
+            }
+
+            clearHistory() {
+                this.history = [];
+                localStorage.removeItem('bielCalculatorHistory');
+                this.updateHistoryDisplay();
+                this.updateMemoryStatus();
+                this.playSound('clear');
+            }
+
+            // Formatação de exibição
+            formatNumber(number) {
+                const num = parseFloat(number);
+                if (isNaN(num)) return '0';
+                
+                if (Math.abs(num) > 1e12) {
+                    return num.toExponential(6);
+                }
+                
+                const parts = num.toString().split('.');
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                
+                if (parts[1]) {
+                    parts[1] = parts[1].slice(0, 8);
+                    while (parts[1].endsWith('0')) {
+                        parts[1] = parts[1].slice(0, -1);
+                    }
+                }
+                
+                return parts[1] ? parts.join(',') : parts[0];
+            }
+
+            updateDisplay() {
+                const previousElement = document.getElementById('previousOperand');
+                const currentElement = document.getElementById('currentOperand');
+                
+                // Adiciona efeito sutil de atualização
+                currentElement.classList.add('updating');
+                
+                currentElement.textContent = this.formatNumber(this.currentOperand);
+                
+                if (this.operation) {
+                    previousElement.textContent = 
+                        `${this.formatNumber(this.previousOperand)} ${this.operation}`;
+                } else {
+                    previousElement.textContent = '';
+                }
+
+                // Adiciona indicador visual para modo percentual
+                if (this.percentMode) {
+                    if (!previousElement.querySelector('.percent-mode')) {
+                        const percentIndicator = document.createElement('span');
+                        percentIndicator.className = 'percent-mode';
+                        percentIndicator.textContent = '%';
+                        previousElement.appendChild(percentIndicator);
+                    }
+                } else {
+                    const existingIndicator = previousElement.querySelector('.percent-mode');
+                    if (existingIndicator) {
+                        existingIndicator.remove();
+                    }
+                }
+
+                // Remove o efeito após a atualização
+                setTimeout(() => {
+                    currentElement.classList.remove('updating');
+                }, 100);
+            }
+
+            updateHistoryDisplay() {
+                const historyList = document.getElementById('historyList');
+                
+                if (this.history.length === 0) {
+                    historyList.innerHTML = '<div class="empty-history">NENHUM DADO ENCONTRADO</div>';
+                    return;
+                }
+
+                historyList.innerHTML = this.history.map(item => `
+                    <div class="history-item" data-id="${item.id}">
+                        <div class="history-calculation">${item.calculation}</div>
+                        <div class="history-result">
+                            <span>= ${this.formatNumber(item.result)}</span>
+                            <span class="history-time">${item.timestamp}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                historyList.querySelectorAll('.history-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const historyItem = this.history.find(h => h.id.toString() === item.dataset.id);
+                        if (historyItem) {
+                            this.currentOperand = historyItem.result.toString();
+                            this.updateDisplay();
+                            this.showNotification('CARREGADO DO HISTÓRICO');
+                        }
+                    });
+                });
+            }
+
+            updateMemoryStatus() {
+                const memoryElement = document.getElementById('memoryStatus');
+                const size = JSON.stringify(this.history).length;
+                
+                if (size < 1024) {
+                    memoryElement.textContent = `${size} B`;
+                } else if (size < 1024 * 1024) {
+                    memoryElement.textContent = `${(size / 1024).toFixed(1)} KB`;
+                } else {
+                    memoryElement.textContent = `${(size / (1024 * 1024)).toFixed(1)} MB`;
+                }
+            }
+
+            // Efeitos e feedback
+            showError(message) {
+                const display = document.getElementById('currentOperand');
+                display.textContent = 'ERRO';
+                display.style.color = 'var(--danger)';
+                this.isError = true;
+                
+                this.playSound('error');
+                this.showAnimation('error');
+                
+                setTimeout(() => {
+                    this.clear();
+                    this.updateDisplay();
+                    display.style.color = '';
+                }, 2000);
+            }
+
+            showNotification(message) {
+                const notification = document.createElement('div');
+                notification.textContent = message;
+                notification.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: var(--panel-bg);
+                    color: var(--secondary);
+                    padding: 12px 20px;
+                    border-radius: 12px;
+                    font-family: 'SF Mono', monospace;
+                    font-weight: 600;
+                    z-index: 10000;
+                    animation: appear 0.3s ease-out;
+                    border: 1px solid var(--glass-border);
+                    backdrop-filter: blur(10px);
+                    box-shadow: var(--shadow-glow);
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'appear 0.3s ease-out reverse';
+                    setTimeout(() => notification.remove(), 300);
+                }, 1500);
+            }
+
+            showAnimation(type) {
+                const container = document.querySelector('.calculator-container');
+                container.style.transform = type === 'error' ? 'translateX(10px)' : 'scale(1.02)';
+                container.style.transition = 'transform 0.1s';
+                
+                setTimeout(() => {
+                    container.style.transform = '';
+                }, 100);
+            }
+
+            playSound(type) {
+                // Simula som com feedback visual
+                const btn = event?.target;
+                if (btn) {
+                    btn.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        if (btn) btn.style.transform = '';
+                    }, 100);
+                }
+            }
+        }
+
+        // Inicializa a calculadora
+        document.addEventListener('DOMContentLoaded', () => {
+            const calculator = new BielCalculator();
+            
+            // Elementos DOM
+            const numberButtons = document.querySelectorAll('[data-number]');
+            const operationButtons = document.querySelectorAll('[data-operation]');
+            const actionButtons = document.querySelectorAll('[data-action]');
+            const themeToggle = document.getElementById('themeToggle');
+            const historyToggle = document.getElementById('historyToggle');
+            const historyPanel = document.getElementById('historyPanel');
+            const clearHistoryButton = document.getElementById('clearHistory');
+
+            // Event Listeners
+            numberButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    calculator.appendNumber(button.dataset.number);
+                    calculator.updateDisplay();
+                });
+            });
+
+            operationButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    calculator.chooseOperation(button.dataset.operation);
+                    calculator.updateDisplay();
+                });
+            });
+
+            actionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const action = button.dataset.action;
+                    
+                    switch(action) {
+                        case 'clear':
+                            calculator.clear();
+                            break;
+                        case 'delete':
+                            calculator.delete();
+                            break;
+                        case 'equals':
+                            calculator.compute();
+                            break;
+                    }
+                    
+                    calculator.updateDisplay();
+                });
+            });
+
+            // Alternância de temas
+            const themes = [
+                { name: 'cyber', primary: '#6c5ce7', secondary: '#00cec9' },
+                { name: 'matrix', primary: '#00ff41', secondary: '#008f11' },
+                { name: 'nebula', primary: '#fd79a8', secondary: '#a29bfe' },
+                { name: 'voltage', primary: '#ffeaa7', secondary: '#fab1a0' },
+                { name: 'ocean', primary: '#0984e3', secondary: '#00cec9' }
+            ];
+            
+            let currentTheme = 0;
+            
+            themeToggle.addEventListener('click', () => {
+                currentTheme = (currentTheme + 1) % themes.length;
+                const theme = themes[currentTheme];
+                
+                document.documentElement.style.setProperty('--primary', theme.primary);
+                document.documentElement.style.setProperty('--primary-glow', theme.primary + '30');
+                document.documentElement.style.setProperty('--secondary', theme.secondary);
+                
+                themeToggle.querySelector('i').style.transform = 'rotate(180deg)';
+                setTimeout(() => {
+                    themeToggle.querySelector('i').style.transform = '';
+                }, 300);
+                
+                calculator.playSound('switch');
+            });
+
+            // Painel de histórico
+            historyToggle.addEventListener('click', () => {
+                const isVisible = historyPanel.style.display === 'block';
+                historyPanel.style.display = isVisible ? 'none' : 'block';
+                if (!isVisible) {
+                    calculator.updateHistoryDisplay();
+                }
+                calculator.playSound('click');
+            });
+
+            clearHistoryButton.addEventListener('click', () => {
+                if (confirm('APAGAR TODOS OS DADOS DO HISTÓRICO?')) {
+                    calculator.clearHistory();
+                }
+            });
+
+            // Suporte ao teclado
+            document.addEventListener('keydown', event => {
+                if (event.key >= '0' && event.key <= '9') {
+                    calculator.appendNumber(event.key);
+                    calculator.updateDisplay();
+                }
+                
+                if (event.key === '.') {
+                    calculator.appendNumber('.');
+                    calculator.updateDisplay();
+                }
+                
+                if (['+', '-', '*', '/', '%'].includes(event.key)) {
+                    let operation = event.key;
+                    if (operation === '*') operation = '×';
+                    if (operation === '/') operation = '÷';
+                    calculator.chooseOperation(operation);
+                    calculator.updateDisplay();
+                }
+                
+                if (event.key === 'Enter' || event.key === '=') {
+                    event.preventDefault();
+                    calculator.compute();
+                    calculator.updateDisplay();
+                }
+                
+                if (event.key === 'Escape') {
+                    calculator.clear();
+                    calculator.updateDisplay();
+                }
+                
+                if (event.key === 'Backspace') {
+                    calculator.delete();
+                    calculator.updateDisplay();
+                }
+                
+                // Atalhos
+                if (event.key === 'h' || event.key === 'H') {
+                    event.preventDefault();
+                    historyToggle.click();
+                }
+                
+                if (event.key === 't' || event.key === 'T') {
+                    event.preventDefault();
+                    themeToggle.click();
+                }
+                
+                if (event.key === 'c' || event.key === 'C') {
+                    event.preventDefault();
+                    calculator.clear();
+                    calculator.updateDisplay();
+                }
+            });
+
+            // Fecha o painel de histórico ao clicar fora
+            document.addEventListener('click', (event) => {
+                if (!historyPanel.contains(event.target) && 
+                    !historyToggle.contains(event.target) && 
+                    historyPanel.style.display === 'block') {
+                    historyPanel.style.display = 'none';
+                }
+            });
+
+            // Inicializa status da memória
+            calculator.updateMemoryStatus();
+        });
+    </script>
+</body>
+</html>
