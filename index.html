@@ -2,14 +2,15 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora iPhone · Display duplo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calculadora iPhone • Laranja original</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: -apple-system, 'Helvetica Neue', 'SF Pro Display', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -19,18 +20,19 @@
             justify-content: center;
             align-items: center;
             margin: 0;
-            padding: 16px;
+            padding: 12px;
         }
 
         .iphone-calculator {
-            width: 340px;
+            width: 100%;
+            max-width: 380px;
             background: #000000;
             border-radius: 48px;
             padding: 20px 16px 28px 16px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 255, 255, 0.05) inset;
         }
 
-        /* novo display duplo: histórico/expressão + resultado */
+        /* Display duplo */
         .display-duplo {
             background: transparent;
             padding: 12px 10px 8px 10px;
@@ -46,13 +48,13 @@
             text-align: right;
             font-size: 24px;
             font-weight: 300;
-            color: #a5a5a5;  /* cinza claro para o histórico */
+            color: #a5a5a5;
             letter-spacing: 0px;
             line-height: 1.2;
             padding: 4px 0;
             white-space: nowrap;
             overflow-x: auto;
-            direction: rtl;  /* rolagem natural para números grandes */
+            direction: rtl;
             font-feature-settings: "tnum";
         }
 
@@ -61,7 +63,7 @@
             background: #222;
         }
         #expressao::-webkit-scrollbar-thumb {
-            background: #ff9f0a;
+            background: #ff9f0a;  /* laranja */
             border-radius: 4px;
         }
 
@@ -100,18 +102,19 @@
             background: #333333;
             color: white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-            transition: all 0.15s ease;
+            transition: all 0.1s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             user-select: none;
-            -webkit-tap-highlight-color: transparent;
             padding: 0 6px;
+            -webkit-tap-highlight-color: transparent;
         }
 
+        /* ---- COR LARANJA VIBRANTE (AMARELADA) IGUAL IPHONE ---- */
         .btn.operador {
-            background: #ff9f0a;
+            background: #ff9f0a;  /* laranja/amarelo padrão Apple */
             color: white;
             font-size: 40px;
             font-weight: 500;
@@ -131,13 +134,14 @@
             padding-left: 30px;
         }
 
-        /* ajustes específicos para símbolos */
+        /* Ajustes finos para símbolos */
         .btn[data-value="÷"] { font-size: 44px; padding-bottom: 6px; }
         .btn[data-value="×"] { font-size: 36px; }
         .btn[data-value="−"] { font-size: 48px; font-weight: 300; padding-bottom: 8px; }
         .btn[data-value="+"] { font-size: 40px; font-weight: 300; }
-        .btn[data-value="="] { font-size: 40px; background: #ff9f0a; }
+        .btn[data-value="="] { font-size: 40px; background: #ff9f0a; } /* laranja */
 
+        /* Efeito de clique */
         .btn:active {
             filter: brightness(1.5);
             transform: scale(0.96);
@@ -145,19 +149,28 @@
 
         .btn.operador:active {
             filter: brightness(1.2);
-            background: #ffb84d;
+            background: #ffb84d;  /* laranja mais claro ao clicar */
         }
 
         .btn.funcao:active {
             background: #cecece;
         }
+
+        /* Garantir que no celular não fique bege */
+        @media (max-width: 500px) {
+            .btn.operador {
+                background: #ff9f0a !important;  /* FORÇA LARANJA */
+            }
+            .btn[data-value="="] {
+                background: #ff9f0a !important;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="iphone-calculator">
-        <!-- DISPLAY DUPLO: expressão (mostra a conta) + resultado -->
         <div class="display-duplo">
-            <input type="text" id="expressao" readonly placeholder=" " value=" " aria-label="Expressão da conta">
+            <input type="text" id="expressao" readonly placeholder=" " value=" " aria-label="Expressão">
             <input type="text" id="resultado" readonly placeholder="0" value="0" aria-label="Resultado">
         </div>
 
@@ -193,13 +206,10 @@
             const resultInput = document.getElementById('resultado');
             const expressaoInput = document.getElementById('expressao');
             
-            let currentInput = '0';            // valor atual (sempre mostrado no resultado)
-            let pendingOperator = null;         // operador pendente
-            let previousValue = null;            // primeiro operando
-            let resetInputOnNextDigit = false;   // começar novo número
-
-            // ---- CONTROLE DA EXPRESSÃO VISÍVEL ----
-            // Guarda a expressão formatada para o display superior
+            let currentInput = '0';
+            let pendingOperator = null;
+            let previousValue = null;
+            let resetInputOnNextDigit = false;
             let expressaoAtual = '';
 
             function atualizarExpressao(novaExpr) {
@@ -207,7 +217,6 @@
                 expressaoInput.value = expressaoAtual || ' ';
             }
 
-            // Atualiza display do resultado
             function updateDisplay(value) {
                 let str = value.toString();
                 if (str.length > 12 && !str.includes('e')) {
@@ -216,14 +225,10 @@
                 resultInput.value = str;
             }
 
-            // ---- Funções principais adaptadas para mostrar a conta ----
-
-            // Quando um dígito é pressionado
             function handleDigit(digit) {
                 if (resetInputOnNextDigit) {
                     currentInput = digit === '.' ? '0.' : digit;
                     resetInputOnNextDigit = false;
-                    // ao iniciar novo número, a expressão mantém o operador, mas vamos atualizar depois
                 } else {
                     if (digit === '.') {
                         if (currentInput.includes('.')) return;
@@ -239,15 +244,11 @@
                     }
                 }
 
-                // Atualiza a expressão conforme o contexto
                 if (previousValue !== null && pendingOperator && !resetInputOnNextDigit) {
-                    // Estamos digitando o segundo número: mostra previous + operador + digitação parcial
                     atualizarExpressao(previousValue + ' ' + pendingOperator + ' ' + currentInput);
                 } else if (previousValue !== null && !pendingOperator) {
-                    // após igual, se digitou novo número, mostra só o número
                     atualizarExpressao(currentInput);
                 } else if (previousValue === null) {
-                    // primeiro número sendo digitado
                     atualizarExpressao(currentInput);
                 }
 
@@ -255,25 +256,21 @@
             }
 
             function setOperator(op) {
-                // Se já há operador pendente e não estamos no início, calcular antes (exceto se vier de '=' )
                 if (pendingOperator !== null && !resetInputOnNextDigit) {
-                    evaluate(false); // false = não mostrar igual na expressão ainda
+                    evaluate(false);
                 }
 
                 const currentNum = parseFloat(currentInput);
                 
                 if (previousValue === null) {
                     previousValue = currentNum;
-                    // Mostra na expressão: primeiro número + operador
                     atualizarExpressao(previousValue + ' ' + op);
                 } else {
-                    // Se já tinha previous (após eval ou anterior), só atualiza expressão
                     atualizarExpressao(previousValue + ' ' + op);
                 }
 
                 pendingOperator = op;
                 resetInputOnNextDigit = true;
-                // currentInput mantém o último número, mas não é mostrado na expressão até digitar
             }
 
             function evaluate(showEqual = true) {
@@ -281,9 +278,6 @@
 
                 const currentNum = parseFloat(currentInput);
                 let newValue = 0;
-                let operacaoValida = true;
-
-                // Monta expressão bonita para mostrar antes do resultado
                 let expressaoCompleta = previousValue + ' ' + pendingOperator + ' ' + currentNum;
                 if (showEqual) expressaoCompleta += ' =';
 
@@ -295,7 +289,7 @@
                         if (currentNum === 0) {
                             currentInput = 'Erro';
                             updateDisplay(currentInput);
-                            atualizarExpressao(expressaoCompleta); // mostra a conta que deu erro
+                            atualizarExpressao(expressaoCompleta);
                             previousValue = null;
                             pendingOperator = null;
                             resetInputOnNextDigit = true;
@@ -307,19 +301,17 @@
                     default: return;
                 }
 
-                // Arredondamento para evitar imprecisões
                 if (Math.abs(newValue) > 1e12) {
                     currentInput = newValue.toExponential(6);
                 } else {
                     currentInput = parseFloat(newValue.toFixed(10)).toString();
                 }
 
-                // Atualiza expressão com o resultado completo
                 atualizarExpressao(expressaoCompleta + ' ' + currentInput);
                 updateDisplay(currentInput);
 
                 previousValue = newValue;
-                pendingOperator = null;      // limpa operador (como iOS após '=')
+                pendingOperator = null;
                 resetInputOnNextDigit = true;
             }
 
@@ -338,7 +330,6 @@
                 num = num * -1;
                 currentInput = num.toString();
                 updateDisplay(currentInput);
-                // Atualiza expressão se for o primeiro número ou segundo
                 if (previousValue !== null && pendingOperator) {
                     atualizarExpressao(previousValue + ' ' + pendingOperator + ' ' + currentInput);
                 } else {
@@ -366,7 +357,6 @@
                 currentInput = currentNum.toString();
                 updateDisplay(currentInput);
 
-                // atualiza expressão
                 if (previousValue !== null && pendingOperator) {
                     atualizarExpressao(previousValue + ' ' + pendingOperator + ' ' + currentInput);
                 } else {
@@ -377,15 +367,13 @@
 
             function handleEqual() {
                 if (pendingOperator && previousValue !== null) {
-                    evaluate(true); // true = mostra '=' na expressão
+                    evaluate(true);
                 } else {
-                    // Se não há operador, só copia currentInput e mantém
                     resetInputOnNextDigit = true;
                     atualizarExpressao(currentInput);
                 }
             }
 
-            // ---- Roteamento de botões ----
             function handleButton(value) {
                 if (currentInput === 'Erro' && value !== 'AC') {
                     if (value === 'AC') allClear();
@@ -405,7 +393,6 @@
                 }
             }
 
-            // ---- Eventos de clique ----
             document.querySelectorAll('.btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const valor = btn.getAttribute('data-value');
@@ -413,7 +400,6 @@
                 });
             });
 
-            // ---- Teclado físico (opcional) ----
             window.addEventListener('keydown', (e) => {
                 const key = e.key;
                 const teclasPermitidas = ['0','1','2','3','4','5','6','7','8','9','.','%','/','*','-','+','=','Enter','Escape','c','C'];
@@ -431,8 +417,7 @@
                 }
             });
 
-            // Inicialização
-            allClear(); // já deixa expressão vazia e resultado 0
+            allClear();
         })();
     </script>
 </body>
